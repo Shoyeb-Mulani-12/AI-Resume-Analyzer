@@ -11,14 +11,12 @@ st.set_page_config(
 # ------------------ CUSTOM CSS ------------------
 st.markdown("""
 <style>
-/* Background */
 body {
     background-color: #0e1117;
 }
 
-/* Header */
 .main-title {
-    font-size: 40px;
+    font-size: 42px;
     font-weight: bold;
     text-align: center;
     background: linear-gradient(90deg, #00c6ff, #0072ff);
@@ -26,49 +24,91 @@ body {
     -webkit-text-fill-color: transparent;
 }
 
-/* Card */
+.subtitle {
+    text-align: center;
+    color: #9ca3af;
+    font-size: 15px;
+}
+
 .card {
     background: #161b22;
     padding: 20px;
     border-radius: 15px;
     box-shadow: 0px 4px 20px rgba(0,0,0,0.4);
+    margin-bottom: 20px;
 }
 
-/* Skills */
 .skill {
     display: inline-block;
     padding: 8px 14px;
     margin: 6px;
     border-radius: 20px;
-    background: linear-gradient(135deg, #1f4037, #99f2c8);
-    color: black;
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+    color: white;
     font-weight: 600;
     font-size: 14px;
 }
 
-/* Section titles */
 .section-title {
     font-size: 22px;
     margin-bottom: 10px;
     font-weight: 600;
+}
+
+.profile {
+    text-align: center;
+    padding: 20px;
+}
+
+.profile-name {
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.profile-role {
+    color: gray;
+    font-size: 14px;
 }
 </style>
 """, unsafe_allow_html=True)
 
 # ------------------ HEADER ------------------
 st.markdown('<p class="main-title">🚀 AI Resume Analyzer</p>', unsafe_allow_html=True)
-st.markdown("<p style='text-align:center;'>Smart Resume Insights with AI</p>", unsafe_allow_html=True)
+st.markdown('<p class="subtitle">Smart Resume Insights powered by AI</p>', unsafe_allow_html=True)
+
+# ✅ UPDATED BRANDING
+st.markdown("""
+<p style='text-align:center; font-size:14px; color:gray;'>
+Developed by <b>Shoyeb Hamid Mulani</b> | MCA Graduate | AI Enthusiast 🚀
+</p>
+""", unsafe_allow_html=True)
 
 st.divider()
 
 # ------------------ INPUT ------------------
-col1, col2 = st.columns(2)
+col1, col2 = st.columns([2,1])
 
 with col1:
-    uploaded_file = st.file_uploader("📤 Upload Resume", type=["pdf"])
+    uploaded_file = st.file_uploader("📤 Upload Resume (PDF)", type=["pdf"])
+    job_description = st.text_area("🧾 Paste Job Description", height=180)
 
+# ------------------ PROFILE CARD ------------------
 with col2:
-    job_description = st.text_area("🧾 Job Description", height=200)
+    st.markdown('<div class="card profile">', unsafe_allow_html=True)
+
+    st.markdown("### 👤 Developer")
+
+    st.markdown('<p class="profile-name">Shoyeb Hamid Mulani</p>', unsafe_allow_html=True)
+    st.markdown('<p class="profile-role">AI Developer | MCA Graduate</p>', unsafe_allow_html=True)
+
+    st.markdown("📧 Email: shoyebmulani4521@gmail.com")
+
+    st.markdown("""
+🔗 [GitHub](https://github.com/Shoyeb-Mulani-12)  
+💼 [LinkedIn](https://linkedin.com/in/shoyeb-mulani)
+""")
+
+    st.markdown('</div>', unsafe_allow_html=True)
 
 # ------------------ FUNCTIONS ------------------
 
@@ -122,7 +162,7 @@ def generate_suggestions(skills, missing):
         suggestions.append("Add ML projects")
 
     for skill in missing:
-        suggestions.append(f"Add {skill} (from job description)")
+        suggestions.append(f"Add {skill} (based on job description)")
 
     return suggestions
 
@@ -138,13 +178,11 @@ if uploaded_file:
 
     col1, col2 = st.columns(2)
 
-    # ATS SCORE
     with col1:
         st.markdown('<p class="section-title">📊 ATS Score</p>', unsafe_allow_html=True)
         st.progress(ats_score / 100)
         st.metric("Score", f"{ats_score}/100")
 
-    # SKILLS
     with col2:
         st.markdown('<p class="section-title">💡 Skills</p>', unsafe_allow_html=True)
 
@@ -158,7 +196,6 @@ if uploaded_file:
 
     st.divider()
 
-    # JOB MATCH
     if job_description:
         match, matched, missing = calculate_job_match(skills, job_description)
 
@@ -186,7 +223,6 @@ if uploaded_file:
 
     st.divider()
 
-    # SUGGESTIONS
     suggestions = generate_suggestions(skills, missing)
 
     st.markdown('<div class="card">', unsafe_allow_html=True)
@@ -201,6 +237,16 @@ if uploaded_file:
 
     st.markdown('</div>', unsafe_allow_html=True)
 
-    # TEXT
     with st.expander("📄 Resume Text"):
         st.write(text)
+
+# ------------------ FOOTER ------------------
+st.markdown("---")
+
+st.markdown("""
+<div style='text-align:center; color:gray; font-size:13px;'>
+🚀 AI Resume Analyzer <br>
+Developed by <b>Shoyeb Hamid Mulani</b><br>
+📩 Contact: shoyebmulani4521@gmail.com
+</div>
+""", unsafe_allow_html=True)
