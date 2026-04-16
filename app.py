@@ -4,24 +4,71 @@ from PyPDF2 import PdfReader
 # ------------------ PAGE CONFIG ------------------
 st.set_page_config(
     page_title="AI Resume Analyzer",
-    page_icon="📄",
+    page_icon="🚀",
     layout="wide"
 )
 
+# ------------------ CUSTOM CSS ------------------
+st.markdown("""
+<style>
+/* Background */
+body {
+    background-color: #0e1117;
+}
+
+/* Header */
+.main-title {
+    font-size: 40px;
+    font-weight: bold;
+    text-align: center;
+    background: linear-gradient(90deg, #00c6ff, #0072ff);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* Card */
+.card {
+    background: #161b22;
+    padding: 20px;
+    border-radius: 15px;
+    box-shadow: 0px 4px 20px rgba(0,0,0,0.4);
+}
+
+/* Skills */
+.skill {
+    display: inline-block;
+    padding: 8px 14px;
+    margin: 6px;
+    border-radius: 20px;
+    background: linear-gradient(135deg, #1f4037, #99f2c8);
+    color: black;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+/* Section titles */
+.section-title {
+    font-size: 22px;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+</style>
+""", unsafe_allow_html=True)
+
 # ------------------ HEADER ------------------
-st.markdown("<h1 style='text-align: center;'>📄 AI Resume Analyzer</h1>", unsafe_allow_html=True)
-st.markdown("<p style='text-align: center;'>Analyze your resume with AI insights</p>", unsafe_allow_html=True)
+st.markdown('<p class="main-title">🚀 AI Resume Analyzer</p>', unsafe_allow_html=True)
+st.markdown("<p style='text-align:center;'>Smart Resume Insights with AI</p>", unsafe_allow_html=True)
 
 st.divider()
 
-# ------------------ INPUT SECTION ------------------
+# ------------------ INPUT ------------------
 col1, col2 = st.columns(2)
 
 with col1:
-    uploaded_file = st.file_uploader("📤 Upload Resume (PDF)", type=["pdf"])
+    uploaded_file = st.file_uploader("📤 Upload Resume", type=["pdf"])
 
 with col2:
-    job_description = st.text_area("🧾 Paste Job Description", height=200)
+    job_description = st.text_area("🧾 Job Description", height=200)
 
 # ------------------ FUNCTIONS ------------------
 
@@ -29,9 +76,8 @@ def extract_text_from_pdf(file):
     reader = PdfReader(file)
     text = ""
     for page in reader.pages:
-        page_text = page.extract_text()
-        if page_text:
-            text += page_text
+        if page.extract_text():
+            text += page.extract_text()
     return text
 
 
@@ -44,22 +90,14 @@ def extract_skills(text):
         "git", "github", "docker", "aws"
     ]
 
-    found_skills = []
     text = text.lower()
-
-    for skill in skills_list:
-        if skill in text:
-            found_skills.append(skill)
-
-    return list(set(found_skills))
+    return list(set([skill for skill in skills_list if skill in text]))
 
 
 def calculate_ats_score(skills):
-    score = len(skills) * 10
-    return min(score, 100)
+    return min(len(skills) * 10, 100)
 
 
-# 🔥 NEW: JOB MATCH FUNCTION
 def calculate_job_match(resume_skills, job_text):
     job_skills = extract_skills(job_text)
 
@@ -69,12 +107,11 @@ def calculate_job_match(resume_skills, job_text):
     matched = list(set(resume_skills) & set(job_skills))
     missing = list(set(job_skills) - set(resume_skills))
 
-    match_score = int((len(matched) / len(job_skills)) * 100)
+    score = int((len(matched) / len(job_skills)) * 100)
+    return score, matched, missing
 
-    return match_score, matched, missing
 
-
-def generate_suggestions(skills, missing_skills):
+def generate_suggestions(skills, missing):
     suggestions = []
 
     if "python" not in skills:
@@ -82,90 +119,88 @@ def generate_suggestions(skills, missing_skills):
     if "sql" not in skills:
         suggestions.append("Add SQL skill")
     if "machine learning" not in skills:
-        suggestions.append("Add Machine Learning projects")
-    if "react" not in skills:
-        suggestions.append("Add React or frontend skills")
-    if "git" not in skills:
-        suggestions.append("Add Git/GitHub experience")
+        suggestions.append("Add ML projects")
 
-    # 🔥 Add missing job skills suggestions
-    for skill in missing_skills:
-        suggestions.append(f"Consider adding '{skill}' based on job description")
+    for skill in missing:
+        suggestions.append(f"Add {skill} (from job description)")
 
     return suggestions
 
-
 # ------------------ MAIN ------------------
 
-if uploaded_file is not None:
+if uploaded_file:
 
-    st.success("✅ File uploaded successfully!")
+    text = extract_text_from_pdf(uploaded_file)
+    skills = extract_skills(text)
+    ats_score = calculate_ats_score(skills)
 
-    resume_text = extract_text_from_pdf(uploaded_file)
-    resume_skills = extract_skills(resume_text)
-    ats_score = calculate_ats_score(resume_skills)
+    st.markdown('<div class="card">', unsafe_allow_html=True)
 
-    # ------------------ DASHBOARD ------------------
     col1, col2 = st.columns(2)
 
+    # ATS SCORE
     with col1:
-        st.subheader("📊 ATS Score")
+        st.markdown('<p class="section-title">📊 ATS Score</p>', unsafe_allow_html=True)
         st.progress(ats_score / 100)
-        st.metric(label="Score", value=f"{ats_score}/100")
+        st.metric("Score", f"{ats_score}/100")
 
+    # SKILLS
     with col2:
-        st.subheader("💡 Resume Skills")
-        if resume_skills:
-            for skill in resume_skills:
-                st.markdown(
-                    f"<span style='background-color:#d4edda; padding:6px; border-radius:8px; margin:5px; display:inline-block;'>{skill}</span>",
-                    unsafe_allow_html=True
-                )
+        st.markdown('<p class="section-title">💡 Skills</p>', unsafe_allow_html=True)
+
+        if skills:
+            for skill in skills:
+                st.markdown(f'<span class="skill">{skill}</span>', unsafe_allow_html=True)
         else:
             st.write("No skills detected")
 
+    st.markdown('</div>', unsafe_allow_html=True)
+
     st.divider()
 
-    # ------------------ JOB MATCHING ------------------
+    # JOB MATCH
     if job_description:
+        match, matched, missing = calculate_job_match(skills, job_description)
 
-        match_score, matched_skills, missing_skills = calculate_job_match(
-            resume_skills, job_description
-        )
+        st.markdown('<div class="card">', unsafe_allow_html=True)
 
-        st.subheader("🎯 Job Match Analysis")
+        st.markdown('<p class="section-title">🎯 Job Match</p>', unsafe_allow_html=True)
+        st.metric("Match Score", f"{match}%")
+        st.progress(match / 100)
 
         col3, col4 = st.columns(2)
 
         with col3:
-            st.metric("Match Score", f"{match_score}%")
-            st.progress(match_score / 100)
+            st.write("✅ Matched Skills")
+            for s in matched:
+                st.success(s)
 
         with col4:
-            st.write("✅ Matched Skills:")
-            for skill in matched_skills:
-                st.success(skill)
+            st.write("❌ Missing Skills")
+            for s in missing:
+                st.error(s)
 
-            st.write("❌ Missing Skills:")
-            for skill in missing_skills:
-                st.error(skill)
-
+        st.markdown('</div>', unsafe_allow_html=True)
     else:
-        missing_skills = []
+        missing = []
 
     st.divider()
 
-    # ------------------ SUGGESTIONS ------------------
-    suggestions = generate_suggestions(resume_skills, missing_skills)
+    # SUGGESTIONS
+    suggestions = generate_suggestions(skills, missing)
 
-    st.subheader("📌 Suggestions to Improve")
+    st.markdown('<div class="card">', unsafe_allow_html=True)
+
+    st.markdown('<p class="section-title">📌 Suggestions</p>', unsafe_allow_html=True)
 
     if suggestions:
         for s in suggestions:
-            st.warning(f"👉 {s}")
+            st.warning(s)
     else:
-        st.success("Great! Your resume looks strong 💪")
+        st.success("Resume looks strong!")
 
-    # ------------------ RESUME TEXT ------------------
-    with st.expander("📄 View Extracted Resume Text"):
-        st.write(resume_text)
+    st.markdown('</div>', unsafe_allow_html=True)
+
+    # TEXT
+    with st.expander("📄 Resume Text"):
+        st.write(text)
